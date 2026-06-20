@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>A Sunday to Remember – BLC Poster Maker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Oswald:wght@400;700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --gold: #c8a84b;
+      --gold-light: #ffe066;
+      --gold-dark: #a08030;
+      --radius: 16px;
+      --shadow: 0 8px 32px rgba(0,0,0,0.25);
+    }
+    body {
+      background: linear-gradient(135deg, #1a0a00 0%, #2d1800 50%, #1a0a00 100%);
+      min-height: 100vh;
+      font-family: 'Oswald', sans-serif;
+      color: #fff;
+    }
+    header {
+      text-align: center;
+      padding: 28px 20px 12px;
+    }
+    header .church-name {
+      font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
+      color: var(--gold); margin-bottom: 8px;
+    }
+    header h1 {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(18px, 4vw, 32px);
+      color: var(--gold-light); line-height: 1.2;
+    }
+    header p {
+      font-size: 15px; color: rgba(255,255,255,0.55);
+      margin-top: 5px; font-family: 'Dancing Script', cursive;
+    }
+    .gold-divider {
+      width: 120px; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+      margin: 12px auto 0;
+    }
+    main {
+      max-width: 980px; margin: 0 auto;
+      padding: 20px 16px 48px;
+      display: flex; gap: 24px;
+      align-items: flex-start; flex-wrap: wrap;
+    }
+    .panel {
+      flex: 0 0 240px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(200,168,75,0.25);
+      border-radius: var(--radius);
+      padding: 20px 16px;
+      backdrop-filter: blur(8px);
+    }
+    @media (max-width: 680px) {
+      main { flex-direction: column; }
+      .panel { flex: 1 1 100%; }
+    }
+    .panel h2 {
+      font-size: 10px; letter-spacing: 2px;
+      text-transform: uppercase; color: var(--gold);
+      margin-bottom: 12px;
+    }
+    /* Drop zone */
+    .drop-zone {
+      border: 1.5px dashed rgba(200,168,75,0.45);
+      border-radius: 12px; padding: 20px 10px;
+      text-align: center; cursor: pointer;
+      background: rgba(200,168,75,0.05);
+      transition: all 0.2s; margin-bottom: 12px;
+    }
+    .drop-zone:hover, .drop-zone.drag-over {
+      border-color: var(--gold); background: rgba(200,168,75,0.1);
+    }
+    #file-input { display: none; }
+    .dz-icon { font-size: 32px; margin-bottom: 6px; }
+    .dz-text { font-size: 11px; color: rgba(255,255,255,0.5); line-height: 1.5; }
+    .preview-thumb {
+      width: 72px; height: 72px; border-radius: 50%;
+      object-fit: cover; border: 3px solid var(--gold);
+      display: none; margin: 0 auto 6px;
+    }
+    /* Buttons */
+    .btn {
+      display: block; width: 100%;
+      padding: 11px 14px; border-radius: 10px;
+      font-family: 'Oswald', sans-serif; font-size: 13px;
+      font-weight: 700; letter-spacing: 1px;
+      text-transform: uppercase; cursor: pointer;
+      transition: all 0.18s; border: none; margin-bottom: 10px;
+    }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid rgba(200,168,75,0.4);
+      color: var(--gold-light);
+    }
+    .btn-outline:hover { background: rgba(200,168,75,0.1); border-color: var(--gold); }
+    .btn-gold {
+      background: linear-gradient(135deg, #e8c84b, #c8a82b, #a88020);
+      color: #1a0800;
+      box-shadow: 0 4px 18px rgba(200,168,75,0.35);
+    }
+    .btn-gold:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(200,168,75,0.5); }
+    .btn-gold:disabled {
+      background: rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.25);
+      box-shadow: none; cursor: not-allowed; transform: none;
+    }
+    /* Slider */
+    #photo-controls { display: none; }
+    .slider-row {
+      display: flex; justify-content: space-between;
+      font-size: 11px; color: rgba(255,255,255,0.5);
+      margin-bottom: 4px; margin-top: 10px;
+    }
+    input[type=range] {
+      width: 100%; accent-color: var(--gold); margin-bottom: 10px;
+      cursor: pointer;
+    }
+    .drag-hint {
+      font-size: 11px; color: rgba(255,255,255,0.4);
+      text-align: center; margin-bottom: 10px; line-height: 1.5;
+      padding: 8px; background: rgba(200,168,75,0.06);
+      border-radius: 8px; border: 1px solid rgba(200,168,75,0.15);
+    }
+    .tip {
+      font-size: 11px; color: rgba(255,255,255,0.35);
+      line-height: 1.6; margin-top: 6px;
+    }
+    /* Canvas panel */
+    .canvas-panel { flex: 1; min-width: 280px; }
+    .canvas-panel h2 {
+      font-size: 10px; letter-spacing: 2px;
+      text-transform: uppercase; color: var(--gold); margin-bottom: 10px;
+    }
+    .canvas-wrap {
+      border-radius: var(--radius); overflow: hidden;
+      border: 1px solid rgba(200,168,75,0.3);
+      box-shadow: var(--shadow);
+      display: block; max-width: 500px; margin: 0 auto;
+      position: relative;
+    }
+    /* Overlay canvas for drag interaction */
+    #overlay {
+      position: absolute; top: 0; left: 0;
+      width: 100%; height: 100%;
+      cursor: grab; touch-action: none;
+    }
+    #overlay.dragging { cursor: grabbing; }
+    canvas { display: block; width: 100%; height: auto; }
+    .canvas-note {
+      font-size: 11px; color: rgba(255,255,255,0.3);
+      text-align: center; margin-top: 6px;
+    }
+    footer {
+      text-align: center; padding: 20px;
+      font-size: 11px; color: rgba(255,255,255,0.2);
+      letter-spacing: 1px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="church-name">Boundless Love Church · Jinja</div>
+  <h1>A Sunday to Remember</h1>
+  <p>Create your personalised poster</p>
+  <div class="gold-divider"></div>
+</header>
+
+<main>
+  <!-- LEFT PANEL -->
+  <aside class="panel">
+    <h2>Your Photo</h2>
+    <div class="drop-zone" id="drop-zone">
+      <div class="dz-icon" id="dz-icon">📷</div>
+      <div class="dz-text" id="dz-text">Click or drag your photo here</div>
+      <img id="preview-thumb" class="preview-thumb" alt="Preview" />
+    </div>
+    <input type="file" id="file-input" accept="image/*" capture="user" />
+
+    <button class="btn btn-outline" onclick="document.getElementById('file-input').click()">
+      Choose Photo
+    </button>
+
+    <div id="photo-controls">
+      <div class="drag-hint">✋ Drag your photo inside the circle to reposition it</div>
+      <div class="slider-row"><span>Zoom</span><span id="zoom-val">100%</span></div>
+      <input type="range" id="zoom-slider" min="50" max="400" value="100" />
+    </div>
+
+    <button class="btn btn-gold" id="dl-btn" disabled>⬇ Download My Poster</button>
+    <p class="tip">Upload your photo — it fills the circle frame automatically. Drag to reposition, zoom to adjust. Then download and share!</p>
+  </aside>
+
+  <!-- CANVAS PANEL -->
+  <section class="canvas-panel">
+    <h2>Live Preview</h2>
+    <div class="canvas-wrap">
+      <canvas id="c" width="900" height="900"></canvas>
+      <!-- transparent overlay for drag events -->
+      <canvas id="overlay" width="900" height="900"></canvas>
+    </div>
+    <p class="canvas-note" id="canvas-note">Upload your photo to see the preview update instantly.</p>
+  </section>
+</main>
+
+<footer>
+  Boundless Love Church &nbsp;·&nbsp; www.thegoodworddailydevotional.org &nbsp;·&nbsp; +256 751 575 372
+</footer>
+
+<script>
+  // ── CANVAS SETUP ──
+  const canvas  = document.getElementById('c');
+  const ctx     = canvas.getContext('2d');
+  const overlay = document.getElementById('overlay');
+  const W = 900, H = 900;
+  canvas.width  = W; canvas.height  = H;
+  overlay.width = W; overlay.height = H;
+
+  // ── CIRCLE: pixel-perfect match to white circle on poster ──
+  // Measured via Python/PIL scan of actual poster pixels (4500×4500)
+  // Full-res: cx=2316, cy=2994, r=599 → canvas ÷5
+  const CIRCLE = { cx: 463, cy: 598, r: 119 };
+
+  let userPhoto = null;
+  // photoOffsetX/Y: how many canvas-px the photo centre is shifted from circle centre
+  let offsetX = 0, offsetY = 0;
+  let zoomPct = 100; // 100 = auto-fit
+
+  // ── POSTER IMAGE ──
+  const poster = new Image();
+  poster.src = 'images/poster.jpg';
+  poster.onload  = () => drawAll();
+  poster.onerror = () => {
+    ctx.fillStyle = '#1a0a00'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle = '#c8a84b'; ctx.font = 'bold 18px Oswald';
+    ctx.textAlign = 'center';
+    ctx.fillText('poster.jpg not found — check images/ folder', W/2, H/2);
+  };
+
+  // ── DRAW ──
+  function baseScale() {
+    // Scale that makes the photo fill the circle exactly
+    if (!userPhoto) return 1;
+    return Math.max(
+      (CIRCLE.r * 2) / userPhoto.width,
+      (CIRCLE.r * 2) / userPhoto.height
+    );
+  }
+
+  function drawAll() {
+    ctx.clearRect(0, 0, W, H);
+    if (poster.complete && poster.naturalWidth > 0) {
+      ctx.drawImage(poster, 0, 0, W, H);
+    }
+    if (!userPhoto) return;
+
+    const { cx, cy, r } = CIRCLE;
+    const scale = baseScale() * (zoomPct / 100);
+    const pw = userPhoto.width  * scale;
+    const ph = userPhoto.height * scale;
+    // Photo draws centred on (cx + offsetX, cy + offsetY)
+    const drawX = cx + offsetX - pw / 2;
+    const drawY = cy + offsetY - ph / 2;
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.clip();
+    ctx.drawImage(userPhoto, drawX, drawY, pw, ph);
+    ctx.restore();
+  }
+
+  // ── DRAG TO REPOSITION ──
+  let isDragging = false;
+  let dragStart  = { x: 0, y: 0 };
+
+  // Convert a client-space point to canvas-space point
+  function toCanvas(clientX, clientY) {
+    const rect  = overlay.getBoundingClientRect();
+    const scaleX = W / rect.width;
+    const scaleY = H / rect.height;
+    return {
+      x: (clientX - rect.left) * scaleX,
+      y: (clientY - rect.top)  * scaleY
+    };
+  }
+
+  // Only allow dragging when cursor is inside the circle
+  function insideCircle(cx, cy) {
+    const { cx: ccx, cy: ccy, r } = CIRCLE;
+    const dx = cx - ccx, dy = cy - ccy;
+    return dx*dx + dy*dy <= r*r;
+  }
+
+  function onDragStart(cx, cy) {
+    if (!userPhoto) return;
+    const p = toCanvas(cx, cy);
+    if (!insideCircle(p.x, p.y)) return;
+    isDragging = true;
+    dragStart = { x: p.x - offsetX, y: p.y - offsetY };
+    overlay.classList.add('dragging');
+  }
+  function onDragMove(cx, cy) {
+    if (!isDragging) return;
+    const p = toCanvas(cx, cy);
+    offsetX = p.x - dragStart.x;
+    offsetY = p.y - dragStart.y;
+    drawAll();
+  }
+  function onDragEnd() {
+    isDragging = false;
+    overlay.classList.remove('dragging');
+  }
+
+  // Mouse
+  overlay.addEventListener('mousedown',  e => onDragStart(e.clientX, e.clientY));
+  window.addEventListener ('mousemove',  e => onDragMove(e.clientX, e.clientY));
+  window.addEventListener ('mouseup',    ()  => onDragEnd());
+
+  // Touch
+  overlay.addEventListener('touchstart', e => {
+    e.preventDefault();
+    onDragStart(e.touches[0].clientX, e.touches[0].clientY);
+  }, { passive: false });
+  overlay.addEventListener('touchmove', e => {
+    e.preventDefault();
+    onDragMove(e.touches[0].clientX, e.touches[0].clientY);
+  }, { passive: false });
+  overlay.addEventListener('touchend',  () => onDragEnd());
+
+  // ── ZOOM SLIDER ──
+  document.getElementById('zoom-slider').addEventListener('input', function() {
+    zoomPct = parseInt(this.value);
+    document.getElementById('zoom-val').textContent = zoomPct + '%';
+    drawAll();
+  });
+
+  // ── FILE LOAD ──
+  const fileInput  = document.getElementById('file-input');
+  const dropZone   = document.getElementById('drop-zone');
+  const dlBtn      = document.getElementById('dl-btn');
+  const prevThumb  = document.getElementById('preview-thumb');
+  const dzIcon     = document.getElementById('dz-icon');
+  const dzText     = document.getElementById('dz-text');
+  const controls   = document.getElementById('photo-controls');
+  const canvasNote = document.getElementById('canvas-note');
+
+  function loadPhoto(file) {
+    if (!file || !file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        userPhoto = img;
+        // Reset position & zoom
+        offsetX = 0; offsetY = 0; zoomPct = 100;
+        document.getElementById('zoom-slider').value = 100;
+        document.getElementById('zoom-val').textContent = '100%';
+
+        dzIcon.style.display  = 'none';
+        dzText.style.display  = 'none';
+        prevThumb.src          = e.target.result;
+        prevThumb.style.display = 'block';
+        controls.style.display  = 'block';
+        dlBtn.disabled          = false;
+        canvasNote.textContent  = '✋ Drag inside the circle to reposition your photo.';
+        drawAll();
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  fileInput.addEventListener('change', e => loadPhoto(e.target.files[0]));
+  dropZone.addEventListener('click',    () => fileInput.click());
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+  dropZone.addEventListener('dragleave',()  => dropZone.classList.remove('drag-over'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault(); dropZone.classList.remove('drag-over');
+    loadPhoto(e.dataTransfer.files[0]);
+  });
+
+  // ── DOWNLOAD (works both locally & on Vercel) ──
+  dlBtn.addEventListener('click', () => {
+    // Render at FULL poster resolution (4500×4500) for best quality
+    const natural = poster.naturalWidth; // 4500
+    const S = natural / W;              // 5
+
+    const dlCanvas = document.createElement('canvas');
+    dlCanvas.width  = natural;
+    dlCanvas.height = poster.naturalHeight;
+    const dlCtx = dlCanvas.getContext('2d');
+
+    // Draw full-res poster
+    dlCtx.drawImage(poster, 0, 0);
+
+    // Draw photo clipped to circle at full res
+    if (userPhoto) {
+      const { cx, cy, r } = CIRCLE;
+      const bigCx = cx * S;
+      const bigCy = cy * S;
+      const bigR  = r  * S;
+      const scale = baseScale() * (zoomPct / 100) * S;
+      const pw = userPhoto.width  * scale;
+      const ph = userPhoto.height * scale;
+      const drawX = bigCx + offsetX * S - pw / 2;
+      const drawY = bigCy + offsetY * S - ph / 2;
+
+      dlCtx.save();
+      dlCtx.beginPath();
+      dlCtx.arc(bigCx, bigCy, bigR, 0, Math.PI * 2);
+      dlCtx.clip();
+      dlCtx.drawImage(userPhoto, drawX, drawY, pw, ph);
+      dlCtx.restore();
+    }
+
+    // Convert to blob → object URL → click (avoids file:// CORS block)
+    dlCanvas.toBlob(blob => {
+      const url = URL.createObjectURL(blob);
+      const a   = document.createElement('a');
+      a.href     = url;
+      a.download = 'sunday-to-remember-poster.png';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1000);
+    }, 'image/png');
+  });
+</script>
+</body>
+</html>
